@@ -338,8 +338,7 @@ def update_json_file():
 
     open('score_record.json', 'w')
     data = {'seed1_amount': seed1_amount, 'seed2_amount': seed2_amount, 'seed3_amount': seed3_amount, 'wood': wood,
-            'money': money, "seed1_amount": seed1_amount, "seed2_amount": seed2_amount, "seed3_amount": seed3_amount,
-            "wood": wood, "money": money}
+            'money': money}
 
     with open('score_record.json', 'w') as json_file:
         json.dump(data, json_file)
