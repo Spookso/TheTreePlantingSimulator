@@ -5,10 +5,10 @@ The game revolves around planting tree seeds which once grown, you can then cut 
 
 Currently, the game contains:
 
--Three seed types
+-Three seed types, each with respective costs and wood types that are valued differently
 
 -A shop allowing you to trade wood and buy seeds
 
--A few music tracks
+-A number of music tracks
 
 -A fully working saving system
