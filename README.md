@@ -7,6 +7,8 @@ Currently, the game contains:
 
 -Three seed types, each with respective costs and wood types that are valued differently
 
+-An end goal of constructing a house
+
 -A shop allowing you to trade wood and buy seeds
 
 -A number of music tracks
