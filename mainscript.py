@@ -2,10 +2,14 @@ import pygame
 import random
 import json
 
+from classes import Tree, Ground
+
 pygame.init()
 win = pygame.display.set_mode((1000, 500))
 pygame.display.set_caption("Tree Planting Simulator")
 clock = pygame.time.Clock()
+
+axe_icon = pygame.transform.scale2x(pygame.image.load('axe_icon.png'))
 
 pygame.mixer.music.set_volume(.05)
 music = random.randint(1, 3)
@@ -20,34 +24,7 @@ font = pygame.font.SysFont('cambria', 60, False)
 font2 = pygame.font.SysFont('cambria', 40, False)
 font3 = pygame.font.SysFont('cambria', 30, False)
 font4 = pygame.font.SysFont('cambria', 35, False)
-
-
-class Ground(object):
-    def __init__(self, x, y, height, width, colour):
-        self.x = x
-        self.y = y
-        self.height = height
-        self.width = width
-        self.colour = colour
-
-    def draw(self, win):
-        pygame.draw.rect(win, self.colour, (self.x, self.y, self.width, self.height))
-
-
-class Tree(object):
-    def __init__(self, x, y, size, colour, colour_value, timer, timer_displace, leaf_colour, type, leaf_displace=None):
-        self.x = x
-        self.y = y
-        self.size = size
-        self.colour = colour
-        self.colour_value = colour_value
-        self.timer = timer
-        self.timer_displace = timer_displace
-        self.is_grounded = False
-        self.leaf_colour = leaf_colour
-        self.type = type
-        self.leaf_displace = leaf_displace
-        self.touching = False
+font5 = pygame.font.SysFont('cambria', 25, False)
 
 
 class Button(object):
@@ -71,6 +48,7 @@ class Button(object):
     def highlight_check(self, mouse_pos):
         if self.is_over(mouse_pos):
             self.colour = (200, 200, 200)
+            return True
         else:
             self.colour = (255, 255, 255)
 
@@ -264,10 +242,13 @@ def redraw_game_window():
         win.fill((135, 206, 235))
         tree_draw()
         base.draw(win)
+        if has_won:
+            pygame.draw.circle(win, (255, 223, 0), (975, 475), 15)
         but1.draw(win, (0, 0, 0))
         but2.draw(win, (0, 0, 0))
         but3.draw(win, (0, 0, 0))
         but4.draw(win, (0, 0, 0))
+        win.blit(axe_icon, (243, 14))
         shop_open_but.draw(win, (0, 0, 0))
         seed1_amount_text = font4.render(str(seed1_amount), 1, (0, 0, 0))
         seed2_amount_text = font4.render(str(seed2_amount), 1, (0, 0, 0))
@@ -304,6 +285,10 @@ def redraw_game_window():
             if shop1_open:
                 shop2_open_but.draw(win, (0, 0, 0))
                 shop3_open_but.draw(win, (0, 0, 0))
+                house_but.draw(win, (0, 0, 0))
+                house_text = font5.render('2000 Brown Wood, 1000 Creme Wood, 500 Dark Wood', 1, (0, 0, 0))
+                if house_but.highlight_check(pos):
+                    win.blit(house_text, (280, 375))
             if shop2_open:
                 exchange1_1.draw(win, (0, 0, 0))
                 exchange1_2.draw(win, (0, 0, 0))
@@ -324,6 +309,16 @@ def redraw_game_window():
                 buy_seed3_1.draw(win, (0, 0, 0))
                 buy_seed3_2.draw(win, (0, 0, 0))
                 buy_seed3_3.draw(win, (0, 0, 0))
+        elif game_finish:
+            win_text = font.render('You Win!', 1, (0, 0, 0))
+            win.fill((135, 206, 235))
+            win.blit(win_text, (200, 100))
+            base.draw(win)
+            pygame.draw.rect(win, (210, 180, 140), (300, 250, 400, 200))
+            pygame.draw.rect(win, (139, 69, 19), (400, 350, 50, 100))
+            pygame.draw.rect(win, (128, 128, 128), (600, 100, 50, 100))
+            pygame.draw.polygon(win, (139, 69, 19), [(250, 250), (750, 250), (500, 100)], 0)
+            tree_draw()
         else:
             win.fill((135, 206, 235))
             base.draw(win)
@@ -341,6 +336,7 @@ def check_json_file():
     global wood2
     global wood3
     global money
+    global has_won
 
     with open('score_record.json') as json_file:
         data = json.load(json_file)
@@ -352,24 +348,16 @@ def check_json_file():
         wood2 = int(data['wood2'])
         wood3 = int(data['wood3'])
         money = int(data['money'])
+        has_won = data['win']
 
         json_file.close()
 
 
 def update_json_file():
-    global seed1_amount
-    global seed2_amount
-    global seed3_amount
-    global wood1
-    global wood2
-    global wood3
-    global money
-
-    open('score_record.json', 'w')
-    data = {'seed1_amount': seed1_amount, 'seed2_amount': seed2_amount, 'seed3_amount': seed3_amount, 'wood1': wood1,
-            'wood2': wood2, 'wood3': wood3, 'money': money}
 
     with open('score_record.json', 'w') as json_file:
+        data = {'seed1_amount': seed1_amount, 'seed2_amount': seed2_amount, 'seed3_amount': seed3_amount, 'wood1': wood1,
+                'wood2': wood2, 'wood3': wood3, 'money': money, 'win': has_won}
         json.dump(data, json_file)
         json_file.close()
 
@@ -379,11 +367,14 @@ but1 = Button(5, 5, 50, 50, (255, 255, 255), 1)
 but2 = Button(80, 5, 50, 50, (255, 255, 255), 2)
 but3 = Button(155, 5, 50, 50, (255, 255, 255), 3)
 but4 = Button(230, 5, 50, 50, (255, 255, 255), -1)
+
 start_but = Button(370, 300, 250, 100, (255, 255, 255), 0, 'Start')
 shop_open_but = Button(895, 5, 100, 50, (255, 255, 255), 0, 'Shop')
 shop_close_but = Button(5, 445, 100, 50, (255, 255, 255), 0, 'Back')
-shop2_open_but = Button(100, 200, 300, 100, (255, 255, 255), 0, 'Exchange Wood')
-shop3_open_but = Button(600, 200, 300, 100, (255, 255, 255), 0, 'Buy Seeds')
+shop2_open_but = Button(100, 150, 300, 100, (255, 255, 255), 0, 'Exchange Wood')
+shop3_open_but = Button(600, 150, 300, 100, (255, 255, 255), 0, 'Buy Seeds')
+house_but = Button(250, 300, 500, 100, (255, 255, 255), 0, 'Construct Your Dream House')
+
 buy_seed1_1 = Button(25, 110, 300, 80, (255, 255, 255), 0, 'Buy 1 Brown Seed ($4)', True)
 buy_seed1_2 = Button(350, 110, 300, 80, (255, 255, 255), 0, 'Buy 5 Brown Seeds ($20)', True)
 buy_seed1_3 = Button(675, 110, 300, 80, (255, 255, 255), 0, 'Buy 20 Brown Seeds ($80)', True)
@@ -393,6 +384,7 @@ buy_seed2_3 = Button(675, 220, 300, 80, (255, 255, 255), 0, 'Buy 20 Creme Seeds 
 buy_seed3_1 = Button(25, 330, 300, 80, (255, 255, 255), 0, 'Buy 1 Dark Seed ($1000)', True)
 buy_seed3_2 = Button(350, 330, 300, 80, (255, 255, 255), 0, 'Buy 5 Dark Seeds ($5000)', True)
 buy_seed3_3 = Button(675, 330, 300, 80, (255, 255, 255), 0, 'Buy 20 Dark Seeds ($20000)', True)
+
 exchange1_1 = Button(buy_seed1_1.x + buy_seed1_1.width // 2 - 145, 110, 300, 80, (0, 0, 0), 0, 'Exchange 5 Brown Wood', True)
 exchange1_2 = Button(buy_seed1_2.x + buy_seed1_2.width // 2 - 145, 110, 300, 80, (0, 0, 0), 0, 'Exchange 50 Brown Wood', True)
 exchange1_3 = Button(buy_seed1_3.x + buy_seed1_3.width // 2 - 145, 110, 300, 80, (0, 0, 0), 0, 'Exchange 500 Brown Wood', True)
@@ -402,6 +394,7 @@ exchange2_3 = Button(buy_seed1_3.x + buy_seed1_3.width // 2 - 145, 220, 300, 80,
 exchange3_1 = Button(buy_seed1_1.x + buy_seed1_1.width // 2 - 145, 330, 300, 80, (0, 0, 0), 0, 'Exchange 5 Dark Wood', True)
 exchange3_2 = Button(buy_seed1_2.x + buy_seed1_2.width // 2 - 145, 330, 300, 80, (0, 0, 0), 0, 'Exchange 50 Dark Wood', True)
 exchange3_3 = Button(buy_seed1_3.x + buy_seed1_3.width // 2 - 145, 330, 300, 80, (0, 0, 0), 0, 'Exchange 500 Dark Wood', True)
+
 seeds = []
 sprouts = []
 saplings = []
@@ -411,6 +404,7 @@ run = True
 seed_type = 1
 type_timer = 0
 game_start = False
+game_finish = False
 shop = False
 shop1_open = False
 shop2_open = False
@@ -434,10 +428,11 @@ while run:
             if start_but.is_over(pos):
                 if not game_start:
                     if not shop:
-                        game_start = True
-                        seed_type = 7
-                        check_json_file()
-                        pygame.mixer.music.play(-1)
+                        if not game_finish:
+                            game_start = True
+                            seed_type = 7
+                            check_json_file()
+                            pygame.mixer.music.play(-1)
             if but1.is_over(pos):
                 seed_type = 1
             if but2.is_over(pos):
@@ -458,13 +453,23 @@ while run:
                     shop = False
                     shop1_open = False
                 if shop2_open_but.is_over(pos):
-                    shop_cooldown = 25
+                    shop_cooldown = 15
                     shop1_open = False
                     shop2_open = True
                 if shop3_open_but.is_over(pos):
-                    shop_cooldown = 25
+                    shop_cooldown = 15
                     shop1_open = False
                     shop3_open = True
+                if house_but.is_over(pos):
+                    if wood1 >= 2000 and wood2 >= 1000 and wood3 >= 500:
+                        wood1 -= 2000
+                        wood2 -= 1000
+                        wood3 -= 500
+                        game_start = False
+                        game_finish = True
+                        shop = False
+                        shop1_open = False
+                        print("Bought House")
             if shop_cooldown <= 0:
                 if shop2_open:
                     if shop_close_but.is_over(pos):
@@ -597,6 +602,8 @@ while run:
             shop_close_but.highlight_check(pos)
             shop2_open_but.highlight_check(pos)
             shop3_open_but.highlight_check(pos)
+            house_but.highlight_check(pos)
+            house_but.highlight_check(pos)
             exchange1_1.highlight_check(pos)
             exchange1_2.highlight_check(pos)
             exchange1_3.highlight_check(pos)
@@ -651,9 +658,9 @@ while run:
                     seed1_amount = 999
                     seed2_amount = 999
                     seed3_amount = 999
-                    wood1 = 999
-                    wood2 = 999
-                    wood3 = 999
+                    wood1 = 9999
+                    wood2 = 9999
+                    wood3 = 9999
                     money = 999999
 
     if keys[pygame.K_x]:
